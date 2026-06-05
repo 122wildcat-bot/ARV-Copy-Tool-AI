@@ -1,0 +1,23 @@
+/* Adam Druck Group brand tokens (BuildSpec §16). */
+:root {
+  --adg-ink: #1c1c1c;
+  --adg-accent: #b5651d; /* terracotta */
+  --adg-paper: #faf7f2;
+  --adg-line: #e8e0d4;
+  --adg-muted: #777;
+  --adg-serif: Georgia, 'Times New Roman', serif;
+  --adg-sans: 'Helvetica Neue', Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--adg-sans); color: var(--adg-ink); background: #fff; }
+.brandbar { display: flex; align-items: baseline; gap: 12px; border-bottom: 3px solid var(--adg-accent); padding: 16px 24px; }
+.monogram { font-family: var(--adg-serif); font-weight: bold; color: var(--adg-accent); font-size: 22px; }
+.tagline { color: var(--adg-muted); font-size: 12px; }
+main { max-width: 900px; margin: 0 auto; padding: 24px; }
+input, button { font: inherit; padding: 8px 10px; }
+button { background: var(--adg-accent); color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+.kpi { display: inline-block; background: var(--adg-paper); border: 1px solid var(--adg-line); border-radius: 6px; padding: 12px 16px; margin-right: 12px; }
+.kpi .label { font-size: 11px; color: var(--adg-muted); text-transform: uppercase; }
+.kpi .value { font-size: 20px; font-weight: bold; }
+.error { color: #a33; }
