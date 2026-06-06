@@ -7,13 +7,24 @@
  */
 import express from 'express';
 import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { env } from './config/env.js';
 import { dbHealthy, migrate } from './db/client.js';
 import { analyzeRouter } from './routes/analyze.js';
 import { authRouter } from './routes/auth.js';
 import { dealsRouter } from './routes/deals.js';
 import { reportsRouter } from './routes/reports.js';
+
+/** Locate the built client, independent of the process working directory. */
+function findClientDist(): string | undefined {
+  const here = dirname(fileURLToPath(import.meta.url)); // .../server/dist
+  return [
+    resolve(here, '../../client/dist'), // compiled layout: server/dist → client/dist
+    resolve(process.cwd(), '../client/dist'), // cwd = server/
+    resolve(process.cwd(), 'client/dist'), // cwd = repo root
+  ].find((p) => existsSync(p));
+}
 
 export function createApp() {
   const app = express();
@@ -32,10 +43,7 @@ export function createApp() {
   // Single-service deploy: serve the built client when present so the whole app
   // runs from one origin (same-origin cookies, relative /api). No-op in dev
   // where the client is served by Vite.
-  const clientDist = [
-    resolve(process.cwd(), '../client/dist'),
-    resolve(process.cwd(), 'client/dist'),
-  ].find((p) => existsSync(p));
+  const clientDist = findClientDist();
   if (clientDist) {
     app.use(express.static(clientDist));
     app.get('*', (req, res, next) => {

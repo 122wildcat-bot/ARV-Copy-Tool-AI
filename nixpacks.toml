@@ -1,0 +1,9 @@
+# Nixpacks build config for Railway.
+# Node version comes from .nvmrc / package.json "engines" (>=22.18), which is
+# required for the built-in node:sqlite module.
+
+[variables]
+# Don't download Chromium during `npm install` — Railway can't run a browser,
+# and the download would fail the build. PDF reports degrade gracefully to HTML;
+# Chromium is only needed for PDF on a normal machine (npx playwright install).
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
