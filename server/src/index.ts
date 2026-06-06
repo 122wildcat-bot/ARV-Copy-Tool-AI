@@ -6,6 +6,8 @@
  * a hook to avoid pulling the dependency before it's needed.
  */
 import express from 'express';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { env } from './config/env.js';
 import { dbHealthy, migrate } from './db/client.js';
 import { analyzeRouter } from './routes/analyze.js';
@@ -26,6 +28,21 @@ export function createApp() {
   app.use('/api/analyze', analyzeRouter);
   app.use('/api/deals', dealsRouter);
   app.use('/api/reports', reportsRouter);
+
+  // Single-service deploy: serve the built client when present so the whole app
+  // runs from one origin (same-origin cookies, relative /api). No-op in dev
+  // where the client is served by Vite.
+  const clientDist = [
+    resolve(process.cwd(), '../client/dist'),
+    resolve(process.cwd(), 'client/dist'),
+  ].find((p) => existsSync(p));
+  if (clientDist) {
+    app.use(express.static(clientDist));
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api') || req.path === '/health') return next();
+      res.sendFile(resolve(clientDist, 'index.html'));
+    });
+  }
 
   return app;
 }
