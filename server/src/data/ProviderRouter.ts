@@ -13,10 +13,13 @@ import type { CompProperty, CompSearchCriteria, SubjectProperty } from '../types
 import type { PropertyDataProvider } from './PropertyDataProvider.js';
 import { AttomProvider } from './providers/AttomProvider.js';
 import { BrightMlsProvider } from './providers/BrightMlsProvider.js';
+import { MockProvider } from './providers/MockProvider.js';
 import { RentcastProvider } from './providers/RentcastProvider.js';
 
 function buildNationalProvider(): PropertyDataProvider {
   switch (env.dataProvider) {
+    case 'mock':
+      return new MockProvider();
     case 'attom':
       return new AttomProvider();
     case 'rentcast':

@@ -29,5 +29,5 @@ export const REPAIR_METHODOLOGY = `You estimate renovation/repair budgets to bri
 
 - Itemize by category: roof, HVAC, kitchen, baths, flooring, paint, windows, electrical, plumbing, exterior, landscaping, plus a contingency line.
 - Size each line to the subject's condition read and square footage. A "renovated" subject needs little; a "distressed" subject needs a full scope.
-- Use realistic regional cost ranges; do not pad. Include a contingency percentage (typically 10-15%) as its own consideration.
+- Use realistic regional cost ranges; do not pad. Provide contingencyPct as a DECIMAL FRACTION (e.g. 0.12 for 12%, typically 0.10-0.15) — never a whole-number percent.
 - Return only through the provided tool. The deterministic engine totals and re-totals your line items, and the user can edit any line — so itemize cleanly.`;

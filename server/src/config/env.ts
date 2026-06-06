@@ -4,6 +4,36 @@
  *
  * Secrets are intentionally NOT defaulted — absence is surfaced where used.
  */
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+/**
+ * Minimal .env loader (no dependency). Loads KEY=VALUE lines from ./.env into
+ * process.env without overriding values already set in the real environment.
+ * Runs once at import. Lines starting with # and blank lines are ignored.
+ */
+function loadDotenv(): void {
+  const path = resolve(process.cwd(), '.env');
+  if (!existsSync(path)) return;
+  for (const raw of readFileSync(path, 'utf8').split('\n')) {
+    const line = raw.trim();
+    if (!line || line.startsWith('#')) continue;
+    const eq = line.indexOf('=');
+    if (eq < 0) continue;
+    const key = line.slice(0, eq).trim();
+    let value = line.slice(eq + 1).trim();
+    // Strip surrounding quotes and inline comments on unquoted values.
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    } else {
+      const hash = value.indexOf(' #');
+      if (hash >= 0) value = value.slice(0, hash).trim();
+    }
+    if (process.env[key] === undefined) process.env[key] = value;
+  }
+}
+
+loadDotenv();
 
 function str(key: string, fallback = ''): string {
   return process.env[key] ?? fallback;

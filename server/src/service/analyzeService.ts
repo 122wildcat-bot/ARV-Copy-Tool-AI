@@ -61,7 +61,9 @@ export async function analyzeAddress(
   let provider = 'cache';
   let subject = cacheRepo.getSubject(key, knobs.cacheTtlHours)?.subject ?? null;
   if (!subject) {
-    const geo = await geocoder.geocode(address);
+    // Geocoding is best-effort: a failure (network, unrecognized address) must
+    // not abort the analysis — providers can still resolve from the raw string.
+    const geo = await geocoder.geocode(address).catch(() => null);
     const resolved = await router.getSubject(geo?.standardized ?? address);
     if (!resolved) throw new Error(`Could not resolve subject for "${address}"`);
     subject = geo ? { ...resolved, lat: geo.lat, lng: geo.lng, standardizedAddress: geo.standardized } : resolved;

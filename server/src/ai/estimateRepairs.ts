@@ -83,15 +83,27 @@ export async function estimateRepairs(
   // Deterministic totals (BuildSpec §0.4): the engine sums the line items and
   // applies the contingency — the model never produces the total.
   const subtotal = value.lineItems.reduce((acc, li) => acc + li.cost, 0);
-  const total = Math.round(subtotal * (1 + value.contingencyPct));
+  const contingencyPct = normalizeContingency(value.contingencyPct);
+  const total = Math.round(subtotal * (1 + contingencyPct));
 
   const repairs: RepairEstimate = {
     lineItems: value.lineItems,
     subtotal,
-    contingencyPct: value.contingencyPct,
+    contingencyPct,
     total,
     confidence: value.confidence,
   };
 
   return { repairs, usage };
+}
+
+/**
+ * Models sometimes return a contingency as a whole-number percent (12) rather
+ * than a fraction (0.12). Normalize to a fraction and clamp to a sane range so
+ * a stray value can never blow up the budget (e.g. subtotal * (1 + 12)).
+ */
+export function normalizeContingency(raw: number): number {
+  const frac = raw > 1 ? raw / 100 : raw;
+  if (!Number.isFinite(frac) || frac < 0) return 0;
+  return Math.min(frac, 0.5);
 }
