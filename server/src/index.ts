@@ -11,6 +11,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { env } from './config/env.js';
 import { dbHealthy, migrate } from './db/client.js';
+import { resolveProviderName } from './data/ProviderRouter.js';
 import { analyzeRouter } from './routes/analyze.js';
 import { authRouter } from './routes/auth.js';
 import { dealsRouter } from './routes/deals.js';
@@ -57,11 +58,22 @@ export function createApp() {
 
 export function start(): void {
   migrate();
+
+  // Startup diagnostics — make the deploy logs self-explanatory.
+  /* eslint-disable no-console */
+  if (!env.anthropicApiKey) {
+    console.warn('[startup] ANTHROPIC_API_KEY is not set — /api/analyze will fail until it is configured.');
+  }
+  if (!env.sessionSecret) {
+    console.warn('[startup] SESSION_SECRET is not set — using an insecure dev fallback. Set it in production.');
+  }
+  console.log(`[startup] data provider: ${resolveProviderName()} | db: ${env.databaseUrl}`);
+
   const app = createApp();
   app.listen(env.port, () => {
-    // eslint-disable-next-line no-console
     console.log(`ARV Engine API listening on :${env.port} (${env.nodeEnv})`);
   });
+  /* eslint-enable no-console */
 }
 
 // Boot when run directly (not when imported by tests).
