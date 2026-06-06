@@ -68,7 +68,8 @@ export const env = {
     deep: str('LLM_MODEL_DEEP', 'claude-opus-4-8'),
   },
 
-  dataProvider: str('DATA_PROVIDER', 'rentcast'),
+  // Empty = auto-select: ATTOM/RentCast if their key is set, else mock.
+  dataProvider: str('DATA_PROVIDER', ''),
   attomApiKey: str('ATTOM_API_KEY'),
   houseCanaryApiKey: str('HOUSECANARY_API_KEY'),
   houseCanaryApiSecret: str('HOUSECANARY_API_SECRET'),

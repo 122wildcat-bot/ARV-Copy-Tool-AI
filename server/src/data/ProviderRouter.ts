@@ -16,8 +16,27 @@ import { BrightMlsProvider } from './providers/BrightMlsProvider.js';
 import { MockProvider } from './providers/MockProvider.js';
 import { RentcastProvider } from './providers/RentcastProvider.js';
 
+/**
+ * Resolve which national provider to use. An explicit DATA_PROVIDER wins;
+ * otherwise auto-select a real provider when its key is present, falling back
+ * to the mock provider so the app works out of the box with only an
+ * ANTHROPIC_API_KEY. Pure (config injected) so it's unit-testable.
+ */
+export function resolveProviderName(
+  cfg: { dataProvider: string; attomApiKey: string; rentcastApiKey: string } = {
+    dataProvider: env.dataProvider,
+    attomApiKey: env.attomApiKey,
+    rentcastApiKey: env.rentcastApiKey,
+  },
+): string {
+  if (cfg.dataProvider) return cfg.dataProvider;
+  if (cfg.attomApiKey) return 'attom';
+  if (cfg.rentcastApiKey) return 'rentcast';
+  return 'mock';
+}
+
 function buildNationalProvider(): PropertyDataProvider {
-  switch (env.dataProvider) {
+  switch (resolveProviderName()) {
     case 'mock':
       return new MockProvider();
     case 'attom':
@@ -26,7 +45,9 @@ function buildNationalProvider(): PropertyDataProvider {
       return new RentcastProvider();
     // housecanary intentionally not yet implemented (BuildSpec §7.1)
     default:
-      return new RentcastProvider();
+      // Unknown value: fall back to mock rather than a keyless provider that
+      // would throw on first use.
+      return new MockProvider();
   }
 }
 
