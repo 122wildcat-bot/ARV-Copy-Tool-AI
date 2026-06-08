@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { env } from './config/env.js';
 import { dbHealthy, migrate } from './db/client.js';
 import { resolveProviderName } from './data/ProviderRouter.js';
+import { adminRouter } from './routes/admin.js';
 import { analyzeRouter } from './routes/analyze.js';
 import { authRouter } from './routes/auth.js';
 import { dealsRouter } from './routes/deals.js';
@@ -40,6 +41,7 @@ export function createApp() {
   app.use('/api/analyze', analyzeRouter);
   app.use('/api/deals', dealsRouter);
   app.use('/api/reports', reportsRouter);
+  app.use('/api/admin', adminRouter);
 
   // Single-service deploy: serve the built client when present so the whole app
   // runs from one origin (same-origin cookies, relative /api). No-op in dev
