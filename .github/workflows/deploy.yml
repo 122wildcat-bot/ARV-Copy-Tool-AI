@@ -3,33 +3,31 @@ name: Deploy to Railway
 # Auto-deploys the app to Railway on every push to main (and on manual run).
 # GitHub's runners can reach Railway even though some sandboxes can't.
 #
-# One-time setup (no secrets in code):
-#   1. Railway → your project → Settings → Tokens → create a *project* token.
-#   2. GitHub → repo Settings → Secrets and variables → Actions:
-#        - New repository SECRET:  RAILWAY_TOKEN   = <the project token>
-#        - New repository VARIABLE: RAILWAY_SERVICE = <your service name, e.g. server>
-#   3. On the Railway service, set the app env vars (at minimum ANTHROPIC_API_KEY).
-#
-# If RAILWAY_TOKEN isn't set, this workflow skips cleanly (no failure).
-# Note: if you also use Railway's native GitHub auto-deploy, disable one of them
-# to avoid double deploys.
+# Setup: add a repository SECRET `RAILWAY_TOKEN` (a Railway *project* token) under
+# Settings → Secrets and variables → Actions. Set the app env vars (at minimum
+# ANTHROPIC_API_KEY) on the Railway service. If RAILWAY_TOKEN isn't set, this
+# workflow skips cleanly. The target service is set via RAILWAY_SERVICE below.
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
+env:
+  # Exact Railway service name (discovered via `railway status`). Override with a
+  # repo variable named RAILWAY_SERVICE if the service is ever renamed.
+  RAILWAY_SERVICE_NAME: ${{ vars.RAILWAY_SERVICE || '@arv-engine/server' }}
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      RAILWAY_SERVICE: ${{ vars.RAILWAY_SERVICE }}
     steps:
       - name: Check for Railway token
         run: |
           if [ -z "$RAILWAY_TOKEN" ]; then
-            echo "::notice::RAILWAY_TOKEN secret not set — skipping deploy. Add it in Settings → Secrets and variables → Actions."
+            echo "::notice::RAILWAY_TOKEN secret not set — skipping deploy."
             echo "SKIP=1" >> "$GITHUB_ENV"
           fi
 
@@ -45,21 +43,8 @@ jobs:
         if: env.SKIP != '1'
         run: npm i -g @railway/cli
 
-      - name: Show Railway context (diagnostic)
-        if: env.SKIP != '1'
-        continue-on-error: true
-        run: |
-          railway --version || true
-          echo "=== railway whoami ==="; railway whoami || true
-          echo "=== railway status --json ==="; railway status --json || true
-          echo "=== railway list ==="; railway list || true
-
       - name: Deploy
         if: env.SKIP != '1'
         run: |
-          if [ -n "$RAILWAY_SERVICE" ]; then
-            railway up --service "$RAILWAY_SERVICE" --ci
-          else
-            echo "::warning::RAILWAY_SERVICE variable not set — deploying to the project's default service."
-            railway up --ci
-          fi
+          echo "Deploying to service: $RAILWAY_SERVICE_NAME"
+          railway up --service "$RAILWAY_SERVICE_NAME" --ci
