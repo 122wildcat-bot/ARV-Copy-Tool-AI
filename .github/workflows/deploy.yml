@@ -45,6 +45,15 @@ jobs:
         if: env.SKIP != '1'
         run: npm i -g @railway/cli
 
+      - name: Show Railway context (diagnostic)
+        if: env.SKIP != '1'
+        continue-on-error: true
+        run: |
+          railway --version || true
+          echo "=== railway whoami ==="; railway whoami || true
+          echo "=== railway status --json ==="; railway status --json || true
+          echo "=== railway list ==="; railway list || true
+
       - name: Deploy
         if: env.SKIP != '1'
         run: |
