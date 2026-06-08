@@ -6,17 +6,12 @@ name: Deploy to Railway
 # Setup: add a repository SECRET `RAILWAY_TOKEN` (a Railway *project* token) under
 # Settings → Secrets and variables → Actions. Set the app env vars (at minimum
 # ANTHROPIC_API_KEY) on the Railway service. If RAILWAY_TOKEN isn't set, this
-# workflow skips cleanly. The target service is set via RAILWAY_SERVICE below.
+# workflow skips cleanly.
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
-
-env:
-  # Exact Railway service name (discovered via `railway status`). Override with a
-  # repo variable named RAILWAY_SERVICE if the service is ever renamed.
-  RAILWAY_SERVICE_NAME: ${{ vars.RAILWAY_SERVICE || '@arv-engine/server' }}
 
 jobs:
   deploy:
@@ -45,6 +40,6 @@ jobs:
 
       - name: Deploy
         if: env.SKIP != '1'
-        run: |
-          echo "Deploying to service: $RAILWAY_SERVICE_NAME"
-          railway up --service "$RAILWAY_SERVICE_NAME" --ci
+        # Service name is hardcoded (the GitHub repo variable RAILWAY_SERVICE was
+        # set to the wrong value). Edit here if the Railway service is renamed.
+        run: railway up --service '@arv-engine/server' --ci
