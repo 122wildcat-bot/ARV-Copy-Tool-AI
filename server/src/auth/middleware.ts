@@ -4,6 +4,7 @@
  */
 import type { NextFunction, Request, Response } from 'express';
 import { SESSION_COOKIE, verifySessionToken } from './session.js';
+import { usersRepo } from './users.js';
 
 declare module 'express-serve-static-core' {
   interface Request {
@@ -30,5 +31,15 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
     return;
   }
   req.userId = userId;
+  next();
+}
+
+/** Requires an authenticated admin. Use after requireAuth. */
+export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
+  const user = req.userId != null ? usersRepo.findById(req.userId) : null;
+  if (user?.role !== 'admin') {
+    res.status(403).json({ error: 'admin access required' });
+    return;
+  }
   next();
 }

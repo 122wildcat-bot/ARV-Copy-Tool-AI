@@ -61,6 +61,12 @@ export const env = {
   googleOAuthClientId: str('GOOGLE_OAUTH_CLIENT_ID'),
   googleOAuthClientSecret: str('GOOGLE_OAUTH_CLIENT_SECRET'),
 
+  // Emails that are granted the `admin` role on signup/login (comma-separated).
+  adminEmails: str('ADMIN_EMAILS', 'yourrealtoradamd@gmail.com')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean),
+
   anthropicApiKey: str('ANTHROPIC_API_KEY'),
   models: {
     extract: str('LLM_MODEL_EXTRACT', 'claude-haiku-4-5-20251001'),

@@ -30,7 +30,14 @@ export function getDb(): DatabaseSync {
 
 /** Idempotent migration runner — applies the schema on startup. */
 export function migrate(): void {
-  getDb().exec(SCHEMA_SQL);
+  const db = getDb();
+  db.exec(SCHEMA_SQL);
+  // Add columns introduced after the initial schema, for DBs created earlier
+  // (SQLite has no "ADD COLUMN IF NOT EXISTS").
+  const userCols = db.prepare('PRAGMA table_info(users)').all() as { name: string }[];
+  if (!userCols.some((c) => c.name === 'role')) {
+    db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'");
+  }
 }
 
 /** Health probe used by the /health route (BuildSpec §14 Phase 0). */

@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
   name TEXT,
   google_sub TEXT UNIQUE,
   password_hash TEXT,
+  role TEXT NOT NULL DEFAULT 'user',
   defaults_json TEXT,
   stripe_customer_id TEXT,
   subscription_status TEXT,

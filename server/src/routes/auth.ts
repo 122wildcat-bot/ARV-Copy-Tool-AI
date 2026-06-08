@@ -7,6 +7,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware.js';
 import { hashPassword, verifyPassword } from '../auth/password.js';
+import { roleForEmail } from '../auth/roles.js';
 import { createSessionToken, SESSION_COOKIE, sessionCookieOptions } from '../auth/session.js';
 import { usersRepo } from '../auth/users.js';
 
@@ -29,9 +30,10 @@ authRouter.post('/signup', (req, res) => {
     res.status(409).json({ error: 'account already exists' });
     return;
   }
-  const id = usersRepo.create({ email, name, passwordHash: hashPassword(password) });
+  const role = roleForEmail(email);
+  const id = usersRepo.create({ email, name, passwordHash: hashPassword(password), role });
   res.cookie(SESSION_COOKIE, createSessionToken(id), sessionCookieOptions());
-  res.status(201).json({ id, email, name: name ?? null });
+  res.status(201).json({ id, email, name: name ?? null, role });
 });
 
 authRouter.post('/login', (req, res) => {
@@ -45,8 +47,16 @@ authRouter.post('/login', (req, res) => {
     res.status(401).json({ error: 'invalid credentials' });
     return;
   }
+  // Reconcile admin role on login, so adding an email to ADMIN_EMAILS upgrades
+  // an account that already existed.
+  let role = user.role;
+  const shouldBe = roleForEmail(user.email);
+  if (shouldBe === 'admin' && role !== 'admin') {
+    usersRepo.setRole(user.id, 'admin');
+    role = 'admin';
+  }
   res.cookie(SESSION_COOKIE, createSessionToken(user.id), sessionCookieOptions());
-  res.json({ id: user.id, email: user.email, name: user.name });
+  res.json({ id: user.id, email: user.email, name: user.name, role });
 });
 
 authRouter.post('/logout', (_req, res) => {
@@ -60,7 +70,7 @@ authRouter.get('/me', requireAuth, (req, res) => {
     res.status(404).json({ error: 'not found' });
     return;
   }
-  res.json({ id: user.id, email: user.email, name: user.name, defaults: user.defaults });
+  res.json({ id: user.id, email: user.email, name: user.name, role: user.role, defaults: user.defaults });
 });
 
 // TODO(Phase 1): Google OAuth callback — exchange code, upsert by google_sub,
