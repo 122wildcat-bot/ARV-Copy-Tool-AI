@@ -38,6 +38,11 @@ jobs:
         if: env.SKIP != '1'
         run: npm i -g @railway/cli
 
+      - name: Show service config (diagnostic)
+        if: env.SKIP != '1'
+        continue-on-error: true
+        run: railway status --json || true
+
       - name: Deploy
         if: env.SKIP != '1'
         # Service name is hardcoded (the GitHub repo variable RAILWAY_SERVICE was

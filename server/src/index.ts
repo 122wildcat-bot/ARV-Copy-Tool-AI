@@ -68,6 +68,7 @@ export function start(): void {
     console.warn('[startup] SESSION_SECRET is not set — using an insecure dev fallback. Set it in production.');
   }
   console.log(`[startup] data provider: ${resolveProviderName()} | db: ${env.databaseUrl}`);
+  console.log('[startup] ARV Engine build 2026-06-08a');
 
   const app = createApp();
   app.listen(env.port, () => {
