@@ -1,0 +1,56 @@
+name: Deploy to Railway
+
+# Auto-deploys the app to Railway on every push to main (and on manual run).
+# GitHub's runners can reach Railway even though some sandboxes can't.
+#
+# One-time setup (no secrets in code):
+#   1. Railway → your project → Settings → Tokens → create a *project* token.
+#   2. GitHub → repo Settings → Secrets and variables → Actions:
+#        - New repository SECRET:  RAILWAY_TOKEN   = <the project token>
+#        - New repository VARIABLE: RAILWAY_SERVICE = <your service name, e.g. server>
+#   3. On the Railway service, set the app env vars (at minimum ANTHROPIC_API_KEY).
+#
+# If RAILWAY_TOKEN isn't set, this workflow skips cleanly (no failure).
+# Note: if you also use Railway's native GitHub auto-deploy, disable one of them
+# to avoid double deploys.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_SERVICE: ${{ vars.RAILWAY_SERVICE }}
+    steps:
+      - name: Check for Railway token
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "::notice::RAILWAY_TOKEN secret not set — skipping deploy. Add it in Settings → Secrets and variables → Actions."
+            echo "SKIP=1" >> "$GITHUB_ENV"
+          fi
+
+      - uses: actions/checkout@v4
+        if: env.SKIP != '1'
+
+      - uses: actions/setup-node@v4
+        if: env.SKIP != '1'
+        with:
+          node-version: 22
+
+      - name: Install Railway CLI
+        if: env.SKIP != '1'
+        run: npm i -g @railway/cli
+
+      - name: Deploy
+        if: env.SKIP != '1'
+        run: |
+          if [ -n "$RAILWAY_SERVICE" ]; then
+            railway up --service "$RAILWAY_SERVICE" --ci
+          else
+            echo "::warning::RAILWAY_SERVICE variable not set — deploying to the project's default service."
+            railway up --ci
+          fi
